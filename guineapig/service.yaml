@@ -1,0 +1,45 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: guineapig
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v1
+      kind:  Mapping
+      name:  guineapig_mapping
+      prefix: /guinea/
+      service: guineapig:8080
+spec:
+  selector:
+    app: guineapig
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guineapig-deployment
+  labels:
+    app: guineapig
+spec:
+  selector:
+    matchLabels:
+      app: guineapig
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: guineapig
+      annotations:
+        prometheus.io/scrape: "true"
+    spec:
+      containers:
+        - name: guineapig
+          image: "shapesai/guineapig:v0.0.2"
+          ports:
+            - containerPort: 8080
